@@ -47,7 +47,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\project\keil\output\</OutputDirectory>
-          <OutputName>CDG_MD_B_B1_300_389</OutputName>
+          <OutputName>CDG_MD_B_B1_300_391</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>

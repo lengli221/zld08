@@ -26,7 +26,9 @@ void fill_FileName(uint8 type,uint8 loc,uint8* fileName){
 					{"SBT_CA_A_B1_B200_000.bin"}};
 	uint8 chargerFileName[][24] = {
 					/*深圳盈源 硬件版本102*/{"CHG_AP_A_A1_A102_000.bin"},/*20210227--盈源硬件版本修改为:101 20210325--盈源硬件版本修改:102*/
-					/*无锡三石 硬件版本100*/{"CHG_SS_A_A1_A100_000.bin"}};
+					/*无锡三石 硬件版本100*/{"CHG_SS_A_A1_A100_000.bin"},
+					/*20210730--新增:充电器电池固件*/
+					/*博兰德 硬件版本101*/	{"CHG_PL_A_A1_A101_000.bin"}};
 	uint8 fileNameTemp[24] = {0};
 	
 

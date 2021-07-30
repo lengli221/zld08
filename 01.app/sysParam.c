@@ -84,8 +84,8 @@ void updateSoftVerPara(void){
 /*----------------------检测:实际运行版本号同文件名版本号是否一致-----------------------------*/
 void reset_ChkCtrSoftVer(void){
 	/*----------------------每次发布新版板必须修改-------------------------------------*/
-	uint16 ctr_SoftVer = 389;
-	uint8 realityFileName[23] ={ "CDG_MD_B_B1_300_389.bin"};
+	uint16 ctr_SoftVer = 391;
+	uint8 realityFileName[23] ={ "CDG_MD_B_B1_300_391.bin"};
 	/*---------------------------------------------------------------------------------*/
 	uint32 ver = (uint32)ctr_SoftVer;
 	uint16 wFileNameLen = 23;
@@ -705,7 +705,7 @@ int16 get_BatLocation(UpgrFilePara upgr){
 /*
 ** 初始化充电器固件包参数
 */
-#define Init_ChargeFileSize								2
+#define Init_ChargeFileSize								3/*2*//*20210730--根据唐工需求新增一个:充电器固件*/
 
 /*
 ** get 充电器固件包个数
@@ -771,6 +771,12 @@ void reset_UpdateChargeFireSize(void){
 		set_ChargeFireSize(Init_ChargeFileSize);
 	}
 
+	/*检测是否新增充电器固件*/
+	if(num != Init_ChargeFileSize){
+		num = Init_ChargeFileSize;
+		set_ChargeFireSize(Init_ChargeFileSize);
+	}
+	
 	/*
 	** 更新电池固件包个数参数
 	*/
@@ -792,7 +798,9 @@ UpgrFilePara get_UpgrChargeFilePara(uint16 loc){
 DetailedInfo default_ChargeDetailedInfo(uint16 loc){
 	DetailedInfo detailedInfo[Init_ChargeFileSize] = {
 		/*深圳盈源*/{102,"C11110"},/*20210227--盈源硬件版本修改为:101 -- 20210325--盈源硬件版本修改:102*/
-		/*无锡三石*/{100,"C21110"}};
+		/*无锡三石*/{100,"C21110"},
+		/*20210730--》新增:充电器固件*/
+		/*博兰德*/{101,"C31110"}};
 
 	DetailedInfo detailInfoTemp = {0};
 
