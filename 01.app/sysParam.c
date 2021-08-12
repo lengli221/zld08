@@ -84,8 +84,8 @@ void updateSoftVerPara(void){
 /*----------------------检测:实际运行版本号同文件名版本号是否一致-----------------------------*/
 void reset_ChkCtrSoftVer(void){
 	/*----------------------每次发布新版板必须修改-------------------------------------*/
-	uint16 ctr_SoftVer = 391;
-	uint8 realityFileName[23] ={ "CDG_MD_B_B1_300_391.bin"};
+	uint16 ctr_SoftVer = 393;
+	uint8 realityFileName[23] ={ "CDG_MD_B_B1_300_393.bin"};
 	/*---------------------------------------------------------------------------------*/
 	uint32 ver = (uint32)ctr_SoftVer;
 	uint16 wFileNameLen = 23;

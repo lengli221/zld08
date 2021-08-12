@@ -622,64 +622,69 @@ void LLPrse_ChgSysInfo(uint8 rxlen,uint8* item,uint8 addr){
 	LPare03_01 lpare03_01 = {0};
 	
 	/*
-	** 电池状态信息
+	** 美团12A V1.5 20210812--增加分控进入bootloader检测是否失联,
+	** 	策略:唐工分控回复0x03,但数据长度限制在长度为0x01-->不更新状态数据
 	*/
-	lpare03_01.flag = item[len];
-	if(lpare03_01.bits.batOnline == true){/*电池在线*/
-		llParam.batDoor[addr].batDoorStateInfo.bits.batOnline = true;
-	}
+	
+	if(rxlen != 0x01){
+		/*
+		** 电池状态信息
+		*/
+		lpare03_01.flag = item[len];
+		if(lpare03_01.bits.batOnline == true){/*电池在线*/
+			llParam.batDoor[addr].batDoorStateInfo.bits.batOnline = true;
+		}
 
-	/*查询分控退出升级或固件下载中*/
-	if(lpare03_01.bits.subExitUpgr == true){
-		/*20210128--修改:清升级开始标志*/
-		llp_ULP->stateInfoChange.sysLogic.comUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<addr);
-		llp_ULP->stateInfoChange.sysLogic.batFileDownload &= ~(DoorNumDefine)((DoorNumDefine)1<<addr);	
-		llp_ULP->stateInfoChange.sysLogic_2.chargeFileDownloading &= ~(DoorNumDefine)((DoorNumDefine)1<<addr);
-	}
+		/*查询分控退出升级或固件下载中*/
+		if(lpare03_01.bits.subExitUpgr == true){
+			/*20210128--修改:清升级开始标志*/
+			llp_ULP->stateInfoChange.sysLogic.comUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<addr);
+			llp_ULP->stateInfoChange.sysLogic.batFileDownload &= ~(DoorNumDefine)((DoorNumDefine)1<<addr);	
+			llp_ULP->stateInfoChange.sysLogic_2.chargeFileDownloading &= ~(DoorNumDefine)((DoorNumDefine)1<<addr);
+		}
 
-	/*空仓,充电中,满仓*/
-	if(lpare03_01.bits.idle == true){
-		doorStateFlag[addr] = 0;/*空仓*/
-	}else if(lpare03_01.bits.ing == true){
-		doorStateFlag[addr] = 1;/*充电中*/
-	}else if(lpare03_01.bits.full == true){/*满仓*/
-		doorStateFlag[addr] = 2;/*满仓*/
-	}else{/*均未置位-->空仓*/
-		doorStateFlag[addr] = 0;/*空仓*/
-	}
-	len += sizeof(uint8);
-
-	/*
-	** 电池接入时SOC 电池充电时长 电池接入时长
-	*/
-	if(llParam.batDoor[addr].batDoorStateInfo.bits.batOnline == true){
-		llParam.batDoor[addr].batDoorSysPara.chgBefSoc = item[len];	
+		/*空仓,充电中,满仓*/
+		if(lpare03_01.bits.idle == true){
+			doorStateFlag[addr] = 0;/*空仓*/
+		}else if(lpare03_01.bits.ing == true){
+			doorStateFlag[addr] = 1;/*充电中*/
+		}else if(lpare03_01.bits.full == true){/*满仓*/
+			doorStateFlag[addr] = 2;/*满仓*/
+		}else{/*均未置位-->空仓*/
+			doorStateFlag[addr] = 0;/*空仓*/
+		}
 		len += sizeof(uint8);
-		memcpy((uint8*)&llParam.batDoor[addr].batDoorSysPara.chgTime,(uint8*)&item[len],sizeof(uint16));	
-		len += sizeof(uint16);
-		memcpy((uint8*)&llParam.batDoor[addr].batDoorSysPara.insertTime,(uint8*)&item[len],sizeof(uint16));
-		len += sizeof(uint16);
-	}else{
-		memset((uint8*)&llParam.batDoor[addr].batDoorSysPara.chgBefSoc,0x00,sizeof(uint8)+sizeof(uint16)+sizeof(uint16));
-		len += sizeof(uint8)+sizeof(uint16)+sizeof(uint16);
-	}
 
-	/*
-	** 更新电池插入时间过长标志
-	*/
-	if(llParam.batDoor[addr].batDoorSysPara.insertTime >= get_ChgTimeLimit()){
-		llp_ULP->stateInfoChange.sysLogic.batChgOTime |= (DoorNumDefine)((DoorNumDefine)1<<addr); 
-	}else{
-		llp_ULP->stateInfoChange.sysLogic.batChgOTime &= (DoorNumDefine)~((DoorNumDefine)1<<addr);
-	}
-	
-	/*
-	** 充电器温度
-	*/
-	memcpy((uint8*)&llParam.batDoor[addr].batDoorSysPara.chargerTemp,(uint8*)&item[len],sizeof(uint16));
-	len += sizeof(uint16);
+		/*
+		** 电池接入时SOC 电池充电时长 电池接入时长
+		*/
+		if(llParam.batDoor[addr].batDoorStateInfo.bits.batOnline == true){
+			llParam.batDoor[addr].batDoorSysPara.chgBefSoc = item[len];	
+			len += sizeof(uint8);
+			memcpy((uint8*)&llParam.batDoor[addr].batDoorSysPara.chgTime,(uint8*)&item[len],sizeof(uint16));	
+			len += sizeof(uint16);
+			memcpy((uint8*)&llParam.batDoor[addr].batDoorSysPara.insertTime,(uint8*)&item[len],sizeof(uint16));
+			len += sizeof(uint16);
+		}else{
+			memset((uint8*)&llParam.batDoor[addr].batDoorSysPara.chgBefSoc,0x00,sizeof(uint8)+sizeof(uint16)+sizeof(uint16));
+			len += sizeof(uint8)+sizeof(uint16)+sizeof(uint16);
+		}
 
+		/*
+		** 更新电池插入时间过长标志
+		*/
+		if(llParam.batDoor[addr].batDoorSysPara.insertTime >= get_ChgTimeLimit()){
+			llp_ULP->stateInfoChange.sysLogic.batChgOTime |= (DoorNumDefine)((DoorNumDefine)1<<addr); 
+		}else{
+			llp_ULP->stateInfoChange.sysLogic.batChgOTime &= (DoorNumDefine)~((DoorNumDefine)1<<addr);
+		}
 	
+		/*
+		** 充电器温度
+		*/
+		memcpy((uint8*)&llParam.batDoor[addr].batDoorSysPara.chargerTemp,(uint8*)&item[len],sizeof(uint16));
+		len += sizeof(uint16);
+	}
 }
 
 /*

@@ -94,31 +94,50 @@ void LLReplay_PollingChkBatStateInfo(void){
 		CAN_TransmitAnalysis(CAN_Port_1, len, (uint8 *)&tx[0], deviceAddr, LL_FunId_BatDoorState);
 	}
 	
+	/*美团12A V1.5 20210812 变更分控失联检测时间为10S*/
 	llParam.comBoardChk[deviceAddr].cnt++;
-	if((TickOut((uint32 *)&llParam.comBoardChk[deviceAddr].itick, 60000) == true) &&llParam.comBoardChk[deviceAddr].cnt >= LLParse_FrameCntMax){
+	if((TickOut((uint32 *)&llParam.comBoardChk[deviceAddr].itick, 10000) == true) &&llParam.comBoardChk[deviceAddr].cnt >= LLParse_FrameCntMax){
 		llParam.comBoardChk[deviceAddr].cnt = LLParse_FrameCntMax;
-		if((llR_ULP->stateInfoChange.sysLogic.comUpgr&((DoorNumDefine)(((DoorNumDefine)0x01)<<deviceAddr))) == (DoorNumDefine)0/*分控升级未处于中*/
-			/*stateChkNotDownloadFile(deviceAddr) == true*/
-			){/*20210226--屏蔽原因:充电柜信息-->0x03--交叉查询,在升级和下载固件的同时也会查询状态--说明:由于分控在boot区未回复FunId = 0x03字段*/
-				llParam.comBoardChk[deviceAddr].comAbn = true;/*通讯板丢失*/
-				/*20210226--分控失联强制结束升级状态和下载文件状态*/
-				/*优化李工语音播报:20210227*/
-				llR_ULP->stateInfoChange.sysLogic.comUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
-				llR_ULP->stateInfoChange.sysLogic.comUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
-				llR_ULP->stateInfoChange.sysLogic.batFileDownload &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
-				llR_ULP->stateInfoChange.sysLogic.batFileDownloadIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
-				llR_ULP->stateInfoChange.sysLogic_2.chargeFileDownloading &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
-				llR_ULP->stateInfoChange.sysLogic_2.chargeFileDownloadFinsh &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
-				/*20210227--充电器升级和电池升级清除标志*/
-				llR_ULP->stateInfoChange.sysLogic.batUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
-				llR_ULP->stateInfoChange.sysLogic.batUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
-				llR_ULP->stateInfoChange.sysLogic_2.chargeUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
-				llR_ULP->stateInfoChange.sysLogic_2.chargeUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);				
-		}else{/*分控升级中不判断失联*/
-			TickOut((uint32 *)&llParam.comBoardChk[deviceAddr].itick, 0);
-			llParam.comBoardChk[deviceAddr].cnt = 0;
-			llParam.comBoardChk[deviceAddr].comAbn = false;
-		}
+//		if((llR_ULP->stateInfoChange.sysLogic.comUpgr&((DoorNumDefine)(((DoorNumDefine)0x01)<<deviceAddr))) == (DoorNumDefine)0/*分控升级未处于中*/
+//			/*stateChkNotDownloadFile(deviceAddr) == true*/
+//			){/*20210226--屏蔽原因:充电柜信息-->0x03--交叉查询,在升级和下载固件的同时也会查询状态--说明:由于分控在boot区未回复FunId = 0x03字段*/
+//				llParam.comBoardChk[deviceAddr].comAbn = true;/*通讯板丢失*/
+//				/*20210226--分控失联强制结束升级状态和下载文件状态*/
+//				/*优化李工语音播报:20210227*/
+//				llR_ULP->stateInfoChange.sysLogic.comUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+//				llR_ULP->stateInfoChange.sysLogic.comUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+//				llR_ULP->stateInfoChange.sysLogic.batFileDownload &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
+//				llR_ULP->stateInfoChange.sysLogic.batFileDownloadIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
+//				llR_ULP->stateInfoChange.sysLogic_2.chargeFileDownloading &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+//				llR_ULP->stateInfoChange.sysLogic_2.chargeFileDownloadFinsh &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+//				/*20210227--充电器升级和电池升级清除标志*/
+//				llR_ULP->stateInfoChange.sysLogic.batUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
+//				llR_ULP->stateInfoChange.sysLogic.batUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
+//				llR_ULP->stateInfoChange.sysLogic_2.chargeUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+//				llR_ULP->stateInfoChange.sysLogic_2.chargeUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);				
+//		}else{/*分控升级中不判断失联*/
+//			TickOut((uint32 *)&llParam.comBoardChk[deviceAddr].itick, 0);
+//			llParam.comBoardChk[deviceAddr].cnt = 0;
+//			llParam.comBoardChk[deviceAddr].comAbn = false;
+//		}
+			/*
+			** 美团12A V1.5 20210812--增加分控进入bootloader检测是否失联,
+			** 	策略:唐工分控回复0x03,但数据长度限制在长度为0x01-->不更新状态数据
+			*/			
+			llParam.comBoardChk[deviceAddr].comAbn = true;/*通讯板丢失*/
+			/*20210226--分控失联强制结束升级状态和下载文件状态*/
+			/*优化李工语音播报:20210227*/
+			llR_ULP->stateInfoChange.sysLogic.comUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+			llR_ULP->stateInfoChange.sysLogic.comUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+			llR_ULP->stateInfoChange.sysLogic.batFileDownload &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
+			llR_ULP->stateInfoChange.sysLogic.batFileDownloadIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
+			llR_ULP->stateInfoChange.sysLogic_2.chargeFileDownloading &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+			llR_ULP->stateInfoChange.sysLogic_2.chargeFileDownloadFinsh &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+			/*20210227--充电器升级和电池升级清除标志*/
+			llR_ULP->stateInfoChange.sysLogic.batUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
+			llR_ULP->stateInfoChange.sysLogic.batUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);	
+			llR_ULP->stateInfoChange.sysLogic_2.chargeUpgr &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);
+			llR_ULP->stateInfoChange.sysLogic_2.chargeUpgrIsOk &= ~(DoorNumDefine)((DoorNumDefine)1<<deviceAddr);				
 	}
 	
 	deviceAddr++;

@@ -262,13 +262,18 @@ bool checkFirstPageWaring(void){
 
 /*
 ** 20210129--新增:下载固件过程中发生一级警告,立即结束下载固件
+**	备注:美团12A V1.5 20210812
+**		主控向分控已发起升级,下载电池固件,下载充电器固件--》不终止下载固件信息
+**		安卓--》向主控发起下载分控,电池固件,充电器固件,立即终止,否则一级告警信息无法响应
+**		安卓升级主控,不终止
 */
 void oneWaringHappen_ImmediatelyEndFire(void){
 	/*控制板下载文件参数变量*/
 	UpgrFilePara upgr = getUpgrFilePara();	
 	int16 loc = -1;
-	ComBup comCurBupTemp = getCurComBup();
+//	ComBup comCurBupTemp = getCurComBup();
 
+	/*安卓--》向主控发起下载分控,电池固件,充电器固件,立即终止,否则一级告警信息无法响应*/
 	if(upgr.upgrFileType.board != 0){/*存在电池,分控固件下载*/
 		memset((uint8*)&upgr.upgrFileType.softVer,0,sizeof(UpgrFilePara)-sizeof(uint8)-sizeof(uint8)-sizeof(DetailedInfo));
 		switch(upgr.upgrFileType.board){
@@ -299,17 +304,18 @@ void oneWaringHappen_ImmediatelyEndFire(void){
 		set_CtrBoardTaskRecoverFlag();
 	}
 
-	if(comCurBupTemp.binFileType.flag != 0){
-		Clear_CurComBupPara();	
-		UpgradeLLParam_Init();
-		/*优化李工语音播报:20210227*/
-		sys_ULP->stateInfoChange.sysLogic.comUpgr = 0;
-		sys_ULP->stateInfoChange.sysLogic.comUpgrIsOk = 0;		
-		sys_ULP->stateInfoChange.sysLogic.batFileDownload = 0;
-		sys_ULP->stateInfoChange.sysLogic.batFileDownloadIsOk = 0;	
-		sys_ULP->stateInfoChange.sysLogic_2.chargeFileDownloading = 0; 
-		sys_ULP->stateInfoChange.sysLogic_2.chargeFileDownloadFinsh = 0;		
-	}
+//	/*主控向分控已发起升级,下载电池固件,下载充电器固件--》不终止下载固件信息*/
+//	if(comCurBupTemp.binFileType.flag != 0){
+//		Clear_CurComBupPara();	
+//		UpgradeLLParam_Init();
+//		/*优化李工语音播报:20210227*/
+//		sys_ULP->stateInfoChange.sysLogic.comUpgr = 0;
+//		sys_ULP->stateInfoChange.sysLogic.comUpgrIsOk = 0;		
+//		sys_ULP->stateInfoChange.sysLogic.batFileDownload = 0;
+//		sys_ULP->stateInfoChange.sysLogic.batFileDownloadIsOk = 0;	
+//		sys_ULP->stateInfoChange.sysLogic_2.chargeFileDownloading = 0; 
+//		sys_ULP->stateInfoChange.sysLogic_2.chargeFileDownloadFinsh = 0;		
+//	}
 }
 
 /*检测到下电标志结束分控升级和下载固件流程-20210130*/
